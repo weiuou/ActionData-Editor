@@ -1,0 +1,566 @@
+[
+  {
+    "id": "Punch_Atk_I",
+    "name": "拳击I",
+    "command": "A1",
+    "animStateName": "punch_atk1",
+    "animBegin": "0",
+    "animEnd": "1",
+    "animSpeed": 1.2,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStateData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": true
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "timingBegin": 0.2,
+        "timingEnd": 0.57,
+        "joints": [
+          "coll_handR"
+        ],
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": "",
+    "derivations": [
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.65,
+        "nextActionId": "Punch_Atk_II"
+      },
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.57,
+        "nextActionId": "Punch_Atk_Move"
+      }
+    ]
+  },
+  {
+    "id": "Punch_Atk_II",
+    "name": "拳击II",
+    "command": "A1",
+    "animStateName": "punch_atk2",
+    "animBegin": "0.05",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStateData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": true
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "timingBegin": 0.2,
+        "timingEnd": 0.55,
+        "joints": [
+          "coll_handL"
+        ],
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": "",
+    "derivations": [
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.57,
+        "nextActionId": "Punch_Atk_III"
+      },
+      {
+        "priority": 0,
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.57,
+        "nextActionId": "Punch_Atk_Move"
+      }
+    ]
+  },
+  {
+    "id": "Punch_Atk_III",
+    "name": "拳击III",
+    "command": "A1",
+    "animStateName": "punch_atk3",
+    "animBegin": "0.15",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": true,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStateData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": true
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "timingBegin": 0.2,
+        "timingEnd": 0.7,
+        "joints": [
+          "coll_handR"
+        ],
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "Avoid_front",
+    "name": "艾伦耶格尔流",
+    "command": "Space",
+    "animStateName": "avoid_front",
+    "animBegin": "0",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": true,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStateData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": true
+      }
+    ],
+    "nextActionId": "Run",
+    "derivations": [
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.5,
+        "nextActionId": "Punch_Atk_III"
+      },
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.5,
+        "nextActionId": "Avoid_combo_leg"
+      }
+    ]
+  },
+  {
+    "id": "Avoid_combo_leg",
+    "name": "带派不老铁",
+    "command": "A2",
+    "animStateName": "Leg_02",
+    "animBegin": "0",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "timingBegin": 0.14,
+        "timingEnd": 0.35,
+        "joints": [
+          "coll_thighL",
+          "coll_shinL",
+          "coll_footL"
+        ],
+        "battleData": {
+          "damage": 1,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": ""
+  },
+  {
+    "id": "Punch_Atk_Move",
+    "name": "袈裟拳",
+    "command": "A2",
+    "animStateName": "punch03",
+    "animBegin": "0.15",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": true,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStraightData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false,
+        "speed": 3
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "joints": [
+          "coll_handL",
+          "coll_handR"
+        ],
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 0.2,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": "",
+    "derivations": [
+      {
+        "priority": 0,
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.57,
+        "nextActionId": "Punch_Atk_I"
+      },
+      {
+        "priority": 0,
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.57,
+        "nextActionId": "Punch_Atk_Move"
+      }
+    ]
+  },
+  {
+    "id": "Pick_up",
+    "name": "这是俺拾嘞",
+    "command": "F",
+    "animStateName": "pick_down",
+    "animBegin": "0",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": false,
+    "TimelineDatas": [],
+    "joints": []
+  },
+  {
+    "id": "Left_Punch",
+    "name": "左拳",
+    "command": "← ↖ ↑ A1",
+    "animStateName": "Left_Punch",
+    "animBegin": "0",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStraightData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": true,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false,
+        "speed": 2.1
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "joints": [
+          "coll_handL"
+        ],
+        "battleData": {
+          "damage": 4999.5,
+          "damageInterval": 0.3,
+          "damageDamping": 0,
+          "criticalRateEx": 1,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      },
+      {
+        "$type": "EffectSpawnData, Assembly-CSharp",
+        "timingBegin": 0.26,
+        "timingEnd": 1,
+        "battleData": {
+          "damage": 4999.5,
+          "damageInterval": 0.3,
+          "damageDamping": 0,
+          "criticalRateEx": 1,
+          "makeBreak": true,
+          "impartType": 2
+        },
+        "effectSpawn": {
+          "objCode": "rasengan",
+          "relativeX": -0.427,
+          "relativeY": 1,
+          "relativeZ": 1.273,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "followYou": false,
+          "destroyWhenColl": true
+        }
+      }
+    ],
+    "nextActionId": "",
+    "derivations": [
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.8,
+        "nextActionId": "left_punch_II"
+      }
+    ]
+  },
+  {
+    "id": "left_punch_II",
+    "name": "二段突",
+    "command": "A1",
+    "animStateName": "Left_Punch",
+    "animBegin": "0",
+    "animEnd": "0.5",
+    "animSpeed": 1.5,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStraightData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": true,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false,
+        "speed": 6
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "joints": [
+          "coll_thighL",
+          "coll_shinL",
+          "coll_footL"
+        ],
+        "battleData": {
+          "damage": 444,
+          "damageInterval": 0.3,
+          "damageDamping": 0,
+          "criticalRateEx": 1,
+          "makeBreak": true,
+          "impartType": 2
+        }
+      },
+      {
+        "$type": "EffectSpawnData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "battleData": {
+          "damage": 444,
+          "damageInterval": 0.3,
+          "damageDamping": 0,
+          "criticalRateEx": 1,
+          "makeBreak": true,
+          "impartType": 2
+        },
+        "effectSpawn": {
+          "objCode": "blue_punch_effect",
+          "relativeX": -0.427,
+          "relativeY": 1,
+          "relativeZ": 2.273,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "followYou": true,
+          "destroyWhenColl": false
+        }
+      }
+    ],
+    "nextActionId": ""
+  },
+  {
+    "id": "Blade_Atk_I",
+    "name": "斩击I",
+    "command": "A1",
+    "animStateName": "blade_atk1",
+    "animBegin": "0.05",
+    "animEnd": "1",
+    "animSpeed": 1.2,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStraightData, Assembly-CSharp",
+        "timingBegin": 0.3,
+        "timingEnd": 0.5,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false,
+        "speed": 1
+      },
+      {
+        "$type": "WeaponCollData, Assembly-CSharp",
+        "timingBegin": 0.2,
+        "timingEnd": 0.5,
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": "",
+    "derivations": [
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.7,
+        "nextActionId": "Blade_Atk_II"
+      }
+    ]
+  },
+  {
+    "id": "Blade_Atk_II",
+    "name": "斩击II",
+    "command": "A1",
+    "animStateName": "blade_atk2",
+    "animBegin": "0.05",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStraightData, Assembly-CSharp",
+        "timingBegin": 0.3,
+        "timingEnd": 0.5,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false,
+        "speed": 1
+      },
+      {
+        "$type": "WeaponCollData, Assembly-CSharp",
+        "timingBegin": 0.2,
+        "timingEnd": 0.5,
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": "",
+    "derivations": [
+      {
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0.7,
+        "nextActionId": "Blade_Atk_III"
+      }
+    ]
+  },
+  {
+    "id": "Blade_Atk_III",
+    "name": "斩击III",
+    "command": "A1",
+    "animStateName": "blade_atk3",
+    "animBegin": "0.05",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": true,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStraightData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 0.5,
+        "useGhostLayer": false,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false,
+        "speed": 3
+      },
+      {
+        "$type": "WeaponCollData, Assembly-CSharp",
+        "timingBegin": 0.2,
+        "timingEnd": 0.5,
+        "battleData": {
+          "damage": 8,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": true,
+          "impartType": 0
+        }
+      }
+    ]
+  }
+]

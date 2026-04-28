@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --primary: 0 0% 5%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 8%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 38%;
+    --accent: 52 94% 58%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 356 84% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 83%;
+    --input: 0 0% 76%;
+    --ring: 0 0% 5%;
+    --radius: 0.42rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    background: #fafafa;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.025) 1px, transparent 1px),
+      linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+      #fafafa;
+    background-size: 28px 28px;
+  }
+
+  body::before {
+    content: none;
+  }
+
+  ::selection {
+    background: #ecd53f;
+    color: #000;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .simple-card-shadow {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.09), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  }
+}
