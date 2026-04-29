@@ -4,7 +4,7 @@ node_modules/
 # Frontend build output
 dist/
 dist-ssr/
-
+ActionData.json
 # Tauri / Rust build output
 src-tauri/target/
 

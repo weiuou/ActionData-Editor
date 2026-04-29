@@ -6,6 +6,8 @@ import { ValidationDialog } from "@/components/layout/ValidationPanel";
 import { useEditorStore } from "@/store/editorStore";
 import type { ValidationIssue } from "@/validation/validationTypes";
 
+const editorBackgroundImage = new URL("../../../918c1090c567402e697576e05ae2fe21.png", import.meta.url).href;
+
 export const AppShell = () => {
   const store = useEditorStore();
   const actions = store.document ?? [];
@@ -88,21 +90,32 @@ export const AppShell = () => {
           onDelete={store.deleteAction}
           onMove={store.moveAction}
         />
-        <section className="min-h-0 overflow-auto rounded-lg border border-border bg-white p-4 simple-card-shadow">
-          <ActionEditor
-            action={selectedAction}
-            actionIndex={selectedActionIndex}
-            selectedTimelineId={store.selectedTimelineId}
-            highlightedValidationPath={highlightedValidationPath}
-            onUpdateAction={(patch) => selectedAction && store.updateAction(selectedAction.__editorId, patch)}
-            onSelectTimeline={store.selectTimeline}
-            onAddTimeline={(type) => selectedAction && store.addTimeline(selectedAction.__editorId, type)}
-            onUpdateTimeline={(timelineId, patch) => selectedAction && store.updateTimeline(selectedAction.__editorId, timelineId, patch)}
-            onDuplicateTimeline={(timelineId) => selectedAction && store.duplicateTimeline(selectedAction.__editorId, timelineId)}
-            onDeleteTimeline={(timelineId) => selectedAction && store.deleteTimeline(selectedAction.__editorId, timelineId)}
-            onMoveTimeline={(timelineId, direction) => selectedAction && store.moveTimeline(selectedAction.__editorId, timelineId, direction)}
-            onUpdateDerivations={(derivations) => selectedAction && store.updateDerivations(selectedAction.__editorId, derivations)}
-          />
+        <section
+          className="relative min-h-0 overflow-auto rounded-lg border border-border p-4 simple-card-shadow"
+          style={{
+            backgroundImage: `linear-gradient(135deg, rgba(8, 10, 24, 0.72), rgba(31, 10, 49, 0.58)), url(${editorBackgroundImage})`,
+            backgroundPosition: "center center",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+          }}
+        >
+          <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
+          <div className="relative z-10">
+            <ActionEditor
+              action={selectedAction}
+              actionIndex={selectedActionIndex}
+              selectedTimelineId={store.selectedTimelineId}
+              highlightedValidationPath={highlightedValidationPath}
+              onUpdateAction={(patch) => selectedAction && store.updateAction(selectedAction.__editorId, patch)}
+              onSelectTimeline={store.selectTimeline}
+              onAddTimeline={(type) => selectedAction && store.addTimeline(selectedAction.__editorId, type)}
+              onUpdateTimeline={(timelineId, patch) => selectedAction && store.updateTimeline(selectedAction.__editorId, timelineId, patch)}
+              onDuplicateTimeline={(timelineId) => selectedAction && store.duplicateTimeline(selectedAction.__editorId, timelineId)}
+              onDeleteTimeline={(timelineId) => selectedAction && store.deleteTimeline(selectedAction.__editorId, timelineId)}
+              onMoveTimeline={(timelineId, direction) => selectedAction && store.moveTimeline(selectedAction.__editorId, timelineId, direction)}
+              onUpdateDerivations={(derivations) => selectedAction && store.updateDerivations(selectedAction.__editorId, derivations)}
+            />
+          </div>
         </section>
       </main>
       <ValidationDialog
