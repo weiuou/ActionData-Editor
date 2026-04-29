@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { JsonTextArea } from "@/components/fields/JsonTextArea";
 import { BooleanField } from "@/components/fields/BooleanField";
 import { NumberField } from "@/components/fields/NumberField";
+import { TimelineRangeField } from "@/components/fields/TimelineRangeField";
 import { TextField } from "@/components/fields/TextField";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BattleData, EffectSpawn, TimelineData } from "@/models/actionData";
@@ -84,10 +85,17 @@ export const TimelineItemEditor = ({ timeline, actionIndex, timelineIndex, highl
         <CardTitle>{header}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid grid-cols-2 gap-3">
-          <NumberField label="Timing Begin" value={timeline.timingBegin} validationPath={`${timelinePath}.timingBegin`} highlighted={isHighlighted(`${timelinePath}.timingBegin`) || isHighlighted(timelinePath)} onChange={(timingBegin) => onChange({ timingBegin })} />
-          <NumberField label="Timing End" value={timeline.timingEnd} validationPath={`${timelinePath}.timingEnd`} highlighted={isHighlighted(`${timelinePath}.timingEnd`) || isHighlighted(timelinePath)} onChange={(timingEnd) => onChange({ timingEnd })} />
-        </div>
+        <TimelineRangeField
+          begin={timeline.timingBegin}
+          end={timeline.timingEnd}
+          beginValidationPath={`${timelinePath}.timingBegin`}
+          endValidationPath={`${timelinePath}.timingEnd`}
+          beginHighlighted={isHighlighted(`${timelinePath}.timingBegin`)}
+          endHighlighted={isHighlighted(`${timelinePath}.timingEnd`)}
+          validationPath={timelinePath}
+          highlighted={isHighlighted(`${timelinePath}.timingBegin`) || isHighlighted(`${timelinePath}.timingEnd`) || isHighlighted(timelinePath)}
+          onChange={onChange}
+        />
 
         {timeline.$type === TIMELINE_TYPES.moveState || timeline.$type === TIMELINE_TYPES.moveStraight ? (
           <div className="grid gap-3">

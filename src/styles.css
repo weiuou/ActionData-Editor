@@ -58,6 +58,38 @@
   textarea {
     font: inherit;
   }
+
+  .timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    border: 2px solid #111;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+  }
+
+  .timeline-slider::-moz-range-thumb {
+    pointer-events: auto;
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    border: 2px solid #111;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+  }
+
+  .timeline-slider::-webkit-slider-runnable-track {
+    background: transparent;
+  }
+
+  .timeline-slider::-moz-range-track {
+    background: transparent;
+  }
 }
 
 @layer utilities {
