@@ -6,6 +6,8 @@ export interface OpenJsonFileResult {
   contents: string;
 }
 
+export const readJsonFile = async (path: string): Promise<string> => readTextFile(path);
+
 export const openJsonFile = async (): Promise<OpenJsonFileResult | null> => {
   const selected = await open({
     multiple: false,
@@ -16,7 +18,7 @@ export const openJsonFile = async (): Promise<OpenJsonFileResult | null> => {
     return null;
   }
 
-  const contents = await readTextFile(selected);
+  const contents = await readJsonFile(selected);
   return { path: selected, contents };
 };
 
