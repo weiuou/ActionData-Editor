@@ -29,6 +29,10 @@ export const AppShell = () => {
   };
 
   useEffect(() => {
+    void store.restoreLastFile();
+  }, []);
+
+  useEffect(() => {
     if (!highlightedValidationPath) {
       return;
     }

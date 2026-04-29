@@ -3,10 +3,12 @@ import type { ActionData, ActionDataDocument, ActionDerivation, TimelineData, Ti
 import { createDefaultAction, createDefaultTimeline, createEditorId } from "@/models/defaults";
 import { type KnownTimelineType } from "@/models/timelineTypes";
 import { cloneForEditor, parseActionDataJson, serializeActionDataJson } from "@/io/jsonCodec";
-import { openJsonFile, saveJsonFile, saveJsonFileAs } from "@/io/tauriFileIo";
+import { openJsonFile, readJsonFile, saveJsonFile, saveJsonFileAs } from "@/io/tauriFileIo";
 import { reorder } from "@/lib/utils";
 import { validateActionData } from "@/validation/validateActionData";
 import type { ValidationIssue } from "@/validation/validationTypes";
+
+const LAST_OPENED_FILE_KEY = "action-data-editor:last-opened-file";
 
 interface EditorState {
   filePath: string | null;
@@ -18,6 +20,7 @@ interface EditorState {
   lastError: string | null;
 
   openFile: () => Promise<void>;
+  restoreLastFile: () => Promise<void>;
   saveFile: () => Promise<void>;
   saveFileAs: () => Promise<void>;
   loadFromText: (text: string, path?: string | null) => void;
@@ -52,6 +55,14 @@ const prepareDuplicatedDerivation = (derivation: ActionDerivation): ActionDeriva
 });
 
 const withValidation = (document: ActionDataDocument | null) => validateActionData(document);
+const getLastOpenedFilePath = () => window.localStorage.getItem(LAST_OPENED_FILE_KEY);
+const setLastOpenedFilePath = (path: string | null) => {
+  if (path) {
+    window.localStorage.setItem(LAST_OPENED_FILE_KEY, path);
+    return;
+  }
+  window.localStorage.removeItem(LAST_OPENED_FILE_KEY);
+};
 
 const confirmDirty = (dirty: boolean) => !dirty || window.confirm("当前文件有未保存修改，是否继续？");
 
@@ -80,6 +91,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   },
 
+  restoreLastFile: async () => {
+    const path = getLastOpenedFilePath();
+    if (!path || get().document) {
+      return;
+    }
+
+    try {
+      const contents = await readJsonFile(path);
+      get().loadFromText(contents, path);
+      if (get().lastError) {
+        setLastOpenedFilePath(null);
+      }
+    } catch (error) {
+      setLastOpenedFilePath(null);
+      set({
+        lastError: error instanceof Error ? `自动恢复上次文件失败：${error.message}` : "自动恢复上次文件失败",
+      });
+    }
+  },
+
   saveFile: async () => {
     const { document, filePath } = get();
     if (!document) {
@@ -91,12 +122,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (!filePath) {
         const savedPath = await saveJsonFileAs(contents);
         if (savedPath) {
+          setLastOpenedFilePath(savedPath);
           set({ filePath: savedPath, dirty: false });
         }
         return;
       }
 
       await saveJsonFile(filePath, contents);
+      setLastOpenedFilePath(filePath);
       set({ dirty: false });
     } catch (error) {
       set({ lastError: error instanceof Error ? error.message : "保存文件失败" });
@@ -112,6 +145,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     try {
       const savedPath = await saveJsonFileAs(serializeActionDataJson(document));
       if (savedPath) {
+        setLastOpenedFilePath(savedPath);
         set({ filePath: savedPath, dirty: false });
       }
     } catch (error) {
@@ -122,10 +156,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   loadFromText: (text, path = null) => {
     const result = parseActionDataJson(text);
     if (!result.ok) {
+      if (path) {
+        setLastOpenedFilePath(null);
+      }
       set({ lastError: result.error });
       return;
     }
 
+    setLastOpenedFilePath(path);
     set({
       filePath: path,
       document: result.document,
