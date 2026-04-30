@@ -1,26 +1,33 @@
 import { create } from "zustand";
 import type { ActionData, ActionDataDocument, ActionDerivation, TimelineData, TimelinePatch } from "@/models/actionData";
 import { createDefaultAction, createDefaultTimeline, createEditorId } from "@/models/defaults";
-import { type KnownTimelineType } from "@/models/timelineTypes";
 import { cloneForEditor, parseActionDataJson, serializeActionDataJson } from "@/io/jsonCodec";
-import { openJsonFile, readJsonFile, saveJsonFile, saveJsonFileAs } from "@/io/tauriFileIo";
+import { openDirectory, openJsonFile, readJsonFile, saveJsonFile, saveJsonFileAs } from "@/io/tauriFileIo";
+import { loadTimelineSchemaRegistry } from "@/io/timelineSchemaFileIo";
 import { reorder } from "@/lib/utils";
+import type { TimelineSchemaRegistry } from "@/schema/csharpTimelineSchema";
 import { validateActionData } from "@/validation/validateActionData";
 import type { ValidationIssue } from "@/validation/validationTypes";
 
 const LAST_OPENED_FILE_KEY = "action-data-editor:last-opened-file";
+const LAST_SCHEMA_DIRECTORY_KEY = "action-data-editor:last-schema-directory";
 
 interface EditorState {
   filePath: string | null;
+  schemaDirectoryPath: string | null;
   document: ActionDataDocument | null;
   selectedActionId: string | null;
   selectedTimelineId: string | null;
+  timelineSchemaRegistry: TimelineSchemaRegistry | null;
   validationIssues: ValidationIssue[];
   dirty: boolean;
   lastError: string | null;
 
   openFile: () => Promise<void>;
+  openSchemaDirectory: () => Promise<void>;
   restoreLastFile: () => Promise<void>;
+  restoreLastSchemaDirectory: () => Promise<void>;
+  loadTimelineSchemas: (schemaDirectoryPath: string | null) => Promise<number>;
   saveFile: () => Promise<void>;
   saveFileAs: () => Promise<void>;
   loadFromText: (text: string, path?: string | null) => void;
@@ -36,7 +43,7 @@ interface EditorState {
   moveAction: (actionId: string, direction: "up" | "down") => void;
 
   updateTimeline: (actionId: string, timelineId: string, patch: TimelinePatch) => void;
-  addTimeline: (actionId: string, type: KnownTimelineType) => void;
+  addTimeline: (actionId: string, type: string) => void;
   duplicateTimeline: (actionId: string, timelineId: string) => void;
   deleteTimeline: (actionId: string, timelineId: string) => void;
   moveTimeline: (actionId: string, timelineId: string, direction: "up" | "down") => void;
@@ -54,8 +61,12 @@ const prepareDuplicatedDerivation = (derivation: ActionDerivation): ActionDeriva
   __editorId: createEditorId(),
 });
 
-const withValidation = (document: ActionDataDocument | null) => validateActionData(document);
+const withValidation = (document: ActionDataDocument | null, timelineSchemaRegistry: TimelineSchemaRegistry | null) =>
+  validateActionData(document, timelineSchemaRegistry);
+
 const getLastOpenedFilePath = () => window.localStorage.getItem(LAST_OPENED_FILE_KEY);
+const getLastSchemaDirectoryPath = () => window.localStorage.getItem(LAST_SCHEMA_DIRECTORY_KEY);
+
 const setLastOpenedFilePath = (path: string | null) => {
   if (path) {
     window.localStorage.setItem(LAST_OPENED_FILE_KEY, path);
@@ -64,13 +75,23 @@ const setLastOpenedFilePath = (path: string | null) => {
   window.localStorage.removeItem(LAST_OPENED_FILE_KEY);
 };
 
-const confirmDirty = (dirty: boolean) => !dirty || window.confirm("当前文件有未保存修改，是否继续？");
+const setLastSchemaDirectoryPath = (path: string | null) => {
+  if (path) {
+    window.localStorage.setItem(LAST_SCHEMA_DIRECTORY_KEY, path);
+    return;
+  }
+  window.localStorage.removeItem(LAST_SCHEMA_DIRECTORY_KEY);
+};
+
+const confirmDirty = (dirty: boolean) => !dirty || window.confirm("Current file has unsaved changes. Continue?");
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   filePath: null,
+  schemaDirectoryPath: null,
   document: null,
   selectedActionId: null,
   selectedTimelineId: null,
+  timelineSchemaRegistry: null,
   validationIssues: [],
   dirty: false,
   lastError: null,
@@ -86,8 +107,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return;
       }
       get().loadFromText(result.contents, result.path);
+      if (get().schemaDirectoryPath) {
+        await get().loadTimelineSchemas(get().schemaDirectoryPath);
+      }
     } catch (error) {
-      set({ lastError: error instanceof Error ? error.message : "打开文件失败" });
+      set({ lastError: error instanceof Error ? error.message : "Failed to open file." });
+    }
+  },
+
+  openSchemaDirectory: async () => {
+    try {
+      const selected = await openDirectory();
+      if (!selected) {
+        return;
+      }
+      setLastSchemaDirectoryPath(selected);
+      set({ schemaDirectoryPath: selected });
+      await get().loadTimelineSchemas(selected);
+    } catch (error) {
+      set({ lastError: error instanceof Error ? error.message : "Failed to load CS schema directory." });
     }
   },
 
@@ -100,14 +138,61 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     try {
       const contents = await readJsonFile(path);
       get().loadFromText(contents, path);
+      if (get().schemaDirectoryPath) {
+        await get().loadTimelineSchemas(get().schemaDirectoryPath);
+      }
       if (get().lastError) {
         setLastOpenedFilePath(null);
       }
     } catch (error) {
       setLastOpenedFilePath(null);
       set({
-        lastError: error instanceof Error ? `自动恢复上次文件失败：${error.message}` : "自动恢复上次文件失败",
+        lastError: error instanceof Error ? `Failed to restore last file: ${error.message}` : "Failed to restore last file.",
       });
+    }
+  },
+
+  restoreLastSchemaDirectory: async () => {
+    const path = getLastSchemaDirectoryPath();
+    if (!path) {
+      return;
+    }
+
+    try {
+      set({ schemaDirectoryPath: path });
+      await get().loadTimelineSchemas(path);
+    } catch {
+      setLastSchemaDirectoryPath(null);
+      set({ schemaDirectoryPath: null, timelineSchemaRegistry: null });
+    }
+  },
+
+  loadTimelineSchemas: async (schemaDirectoryPath) => {
+    set((state) => ({
+      schemaDirectoryPath,
+      timelineSchemaRegistry: null,
+      validationIssues: withValidation(state.document, null),
+    }));
+
+    if (!schemaDirectoryPath) {
+      return 0;
+    }
+
+    try {
+      const timelineSchemaRegistry = await loadTimelineSchemaRegistry(schemaDirectoryPath);
+      set((state) => ({
+        schemaDirectoryPath,
+        timelineSchemaRegistry,
+        validationIssues: withValidation(state.document, timelineSchemaRegistry),
+      }));
+      return timelineSchemaRegistry?.timelineClassNames.length ?? 0;
+    } catch {
+      set((state) => ({
+        schemaDirectoryPath,
+        timelineSchemaRegistry: null,
+        validationIssues: withValidation(state.document, null),
+      }));
+      return 0;
     }
   },
 
@@ -132,7 +217,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       setLastOpenedFilePath(filePath);
       set({ dirty: false });
     } catch (error) {
-      set({ lastError: error instanceof Error ? error.message : "保存文件失败" });
+      set({ lastError: error instanceof Error ? error.message : "Failed to save file." });
     }
   },
 
@@ -149,7 +234,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         set({ filePath: savedPath, dirty: false });
       }
     } catch (error) {
-      set({ lastError: error instanceof Error ? error.message : "另存为失败" });
+      set({ lastError: error instanceof Error ? error.message : "Failed to save file as." });
     }
   },
 
@@ -164,18 +249,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
 
     setLastOpenedFilePath(path);
-    set({
+    set((state) => ({
       filePath: path,
       document: result.document,
       selectedActionId: result.document[0]?.__editorId ?? null,
       selectedTimelineId: null,
-      validationIssues: withValidation(result.document),
+      validationIssues: withValidation(result.document, state.timelineSchemaRegistry),
       dirty: false,
       lastError: null,
-    });
+    }));
   },
 
-  validate: () => set((state) => ({ validationIssues: withValidation(state.document) })),
+  validate: () => set((state) => ({ validationIssues: withValidation(state.document, state.timelineSchemaRegistry) })),
   clearError: () => set({ lastError: null }),
 
   selectAction: (actionId) => set({ selectedActionId: actionId, selectedTimelineId: null }),
@@ -186,14 +271,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const document = state.document?.map((action) =>
         action.__editorId === actionId ? { ...action, ...patch } : action,
       ) ?? null;
-      return { document, dirty: true, validationIssues: withValidation(document) };
+      return { document, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   addAction: () =>
     set((state) => {
       const document = [...(state.document ?? []), createDefaultAction(state.document?.length ?? 0)];
       const selectedActionId = document[document.length - 1]?.__editorId ?? null;
-      return { document, selectedActionId, selectedTimelineId: null, dirty: true, validationIssues: withValidation(document) };
+      return { document, selectedActionId, selectedTimelineId: null, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   duplicateAction: (actionId) =>
@@ -207,7 +292,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ...cloneForEditor(source),
         __editorId: createEditorId(),
         id: `${source.id ?? "Action"}_copy`,
-        name: `${source.name ?? "动作"} Copy`,
+        name: `${source.name ?? "Action"} Copy`,
         TimelineDatas: source.TimelineDatas?.map(prepareDuplicatedTimeline) ?? [],
         derivations: source.derivations?.map(prepareDuplicatedDerivation) ?? [],
       };
@@ -219,7 +304,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         selectedActionId: duplicate.__editorId,
         selectedTimelineId: null,
         dirty: true,
-        validationIssues: withValidation(document),
+        validationIssues: withValidation(document, state.timelineSchemaRegistry),
       };
     }),
 
@@ -227,7 +312,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => {
       const document = state.document?.filter((action) => action.__editorId !== actionId) ?? null;
       const selectedActionId = state.selectedActionId === actionId ? document?.[0]?.__editorId ?? null : state.selectedActionId;
-      return { document, selectedActionId, selectedTimelineId: null, dirty: true, validationIssues: withValidation(document) };
+      return { document, selectedActionId, selectedTimelineId: null, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   moveAction: (actionId, direction) =>
@@ -237,7 +322,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
       const index = state.document.findIndex((action) => action.__editorId === actionId);
       const document = reorder(state.document, index, direction);
-      return { document, dirty: true, validationIssues: withValidation(document) };
+      return { document, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   updateTimeline: (actionId, timelineId, patch) =>
@@ -253,18 +338,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           ) ?? [],
         };
       }) ?? null;
-      return { document, dirty: true, validationIssues: withValidation(document) };
+      return { document, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   addTimeline: (actionId, type) =>
     set((state) => {
-      const timeline = createDefaultTimeline(type);
+      const timeline = createDefaultTimeline(type, state.timelineSchemaRegistry);
       const document = state.document?.map((action) =>
         action.__editorId === actionId
           ? { ...action, TimelineDatas: [...(action.TimelineDatas ?? []), timeline] }
           : action,
       ) ?? null;
-      return { document, selectedTimelineId: timeline.__editorId, dirty: true, validationIssues: withValidation(document) };
+      return { document, selectedTimelineId: timeline.__editorId, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   duplicateTimeline: (actionId, timelineId) =>
@@ -285,7 +370,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         next.splice(index + 1, 0, duplicate);
         return { ...action, TimelineDatas: next };
       }) ?? null;
-      return { document, selectedTimelineId, dirty: true, validationIssues: withValidation(document) };
+      return { document, selectedTimelineId, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   deleteTimeline: (actionId, timelineId) =>
@@ -299,7 +384,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         document,
         selectedTimelineId: state.selectedTimelineId === timelineId ? null : state.selectedTimelineId,
         dirty: true,
-        validationIssues: withValidation(document),
+        validationIssues: withValidation(document, state.timelineSchemaRegistry),
       };
     }),
 
@@ -313,7 +398,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         const index = timelines.findIndex((timeline) => timeline.__editorId === timelineId);
         return { ...action, TimelineDatas: reorder(timelines, index, direction) };
       }) ?? null;
-      return { document, dirty: true, validationIssues: withValidation(document) };
+      return { document, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 
   updateDerivations: (actionId, derivations) =>
@@ -321,6 +406,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const document = state.document?.map((action) =>
         action.__editorId === actionId ? { ...action, derivations } : action,
       ) ?? null;
-      return { document, dirty: true, validationIssues: withValidation(document) };
+      return { document, dirty: true, validationIssues: withValidation(document, state.timelineSchemaRegistry) };
     }),
 }));

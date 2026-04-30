@@ -22,6 +22,15 @@ export const openJsonFile = async (): Promise<OpenJsonFileResult | null> => {
   return { path: selected, contents };
 };
 
+export const openDirectory = async (): Promise<string | null> => {
+  const selected = await open({
+    multiple: false,
+    directory: true,
+  });
+
+  return typeof selected === "string" ? selected : null;
+};
+
 export const saveJsonFile = async (path: string, contents: string): Promise<void> => {
   await writeTextFile(path, contents);
 };
