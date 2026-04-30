@@ -23,8 +23,8 @@ export const DerivationEditor = ({ derivations, actionIndex, highlightedValidati
     <section className="grid gap-3">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-mono text-2xl font-black leading-none text-black">Derivations</h2>
-          <p className="text-sm text-muted-foreground">配置连招派生窗口与下一个动作。</p>
+          <h2 className="font-mono text-2xl font-black leading-none text-white drop-shadow">Derivations</h2>
+          <p className="text-sm text-white/80 drop-shadow">配置连招派生窗口与下一个动作。</p>
         </div>
         <Button
           type="button"

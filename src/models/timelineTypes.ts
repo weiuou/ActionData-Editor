@@ -7,8 +7,12 @@ export const TIMELINE_TYPES = {
 } as const;
 
 export type KnownTimelineType = (typeof TIMELINE_TYPES)[keyof typeof TIMELINE_TYPES];
+export interface TimelineTypeOption {
+  value: string;
+  label: string;
+}
 
-export const TIMELINE_TYPE_OPTIONS: Array<{ value: KnownTimelineType; label: string }> = [
+export const TIMELINE_TYPE_OPTIONS: TimelineTypeOption[] = [
   { value: TIMELINE_TYPES.moveState, label: "Move State" },
   { value: TIMELINE_TYPES.moveStraight, label: "Move Straight" },
   { value: TIMELINE_TYPES.jointColl, label: "Joint Collision" },

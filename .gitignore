@@ -30,3 +30,4 @@ Thumbs.db
 
 # Local Claude settings
 .claude/settings.local.json
+test-src/

@@ -1,5 +1,6 @@
 import type { ActionData, BattleData, EffectSpawn, TimelineData } from "./actionData";
 import { TIMELINE_TYPES, type KnownTimelineType } from "./timelineTypes";
+import { buildDefaultObjectForType, getTimelineSchemaForType, type TimelineSchemaRegistry } from "@/schema/csharpTimelineSchema";
 
 export const createEditorId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -42,7 +43,7 @@ export const createDefaultAction = (existingCount: number): ActionData => ({
   derivations: [],
 });
 
-export const createDefaultTimeline = (type: KnownTimelineType): TimelineData => {
+export const createDefaultTimeline = (type: KnownTimelineType | string, registry: TimelineSchemaRegistry | null = null): TimelineData => {
   const base = {
     __editorId: createEditorId(),
     $type: type,
@@ -87,5 +88,16 @@ export const createDefaultTimeline = (type: KnownTimelineType): TimelineData => 
         ...base,
         battleData: defaultBattleData(),
       };
+    default: {
+      const schema = getTimelineSchemaForType(registry, type);
+      if (!schema) {
+        return base;
+      }
+      const dynamicDefaults = buildDefaultObjectForType(schema.name, registry ?? { types: {}, enums: {}, timelineClassNames: [] });
+      return {
+        ...base,
+        ...(dynamicDefaults ?? {}),
+      };
+    }
   }
 };

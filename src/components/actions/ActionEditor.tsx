@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DerivationEditor } from "./DerivationEditor";
 import { TimelineEditor } from "@/components/timelines/TimelineEditor";
 import type { ActionData, ActionDerivation, NumericValue, TimelinePatch } from "@/models/actionData";
-import type { KnownTimelineType } from "@/models/timelineTypes";
 
 const actionFormSchema = z.object({
   id: z.string().optional(),
@@ -32,7 +31,7 @@ interface ActionEditorProps {
   highlightedValidationPath: string | null;
   onUpdateAction: (patch: Partial<ActionData>) => void;
   onSelectTimeline: (id: string) => void;
-  onAddTimeline: (type: KnownTimelineType) => void;
+  onAddTimeline: (type: string) => void;
   onUpdateTimeline: (timelineId: string, patch: TimelinePatch) => void;
   onDuplicateTimeline: (timelineId: string) => void;
   onDeleteTimeline: (timelineId: string) => void;

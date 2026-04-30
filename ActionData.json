@@ -562,5 +562,53 @@
         }
       }
     ]
+  },
+  {
+    "id": "Fuck_u",
+    "name": "发Q",
+    "command": "Q",
+    "animStateName": "Fuck_u",
+    "animBegin": "0",
+    "animEnd": "1",
+    "animSpeed": 1,
+    "dirChangeable": false,
+    "TimelineDatas": [
+      {
+        "$type": "MoveStateData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "useGhostLayer": true,
+        "useGravity": true,
+        "useCommand": false,
+        "moveVelMultiAddition": 0,
+        "useRootMotion": false
+      },
+      {
+        "$type": "JointCollData, Assembly-CSharp",
+        "timingBegin": 0,
+        "timingEnd": 1,
+        "joints": [],
+        "battleData": {
+          "damage": 0,
+          "damageInterval": 1,
+          "damageDamping": 0,
+          "criticalRateEx": 0,
+          "makeBreak": false,
+          "impartType": 0
+        }
+      }
+    ],
+    "nextActionId": "Fuck_u",
+    "derivations": [
+      {
+        "priority": 0,
+        "checkPeriod": {
+          "min": 0,
+          "max": 1
+        },
+        "fastExitTime": 0,
+        "nextActionId": ""
+      }
+    ]
   }
 ]

@@ -31,7 +31,10 @@ export const AppShell = () => {
   };
 
   useEffect(() => {
-    void store.restoreLastFile();
+    void (async () => {
+      await store.restoreLastSchemaDirectory();
+      await store.restoreLastFile();
+    })();
   }, []);
 
   useEffect(() => {
@@ -67,10 +70,12 @@ export const AppShell = () => {
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       <Toolbar
         filePath={store.filePath}
+        schemaDirectoryPath={store.schemaDirectoryPath}
         dirty={store.dirty}
         issueCount={store.validationIssues.length}
         errorCount={errorCount}
         onOpen={store.openFile}
+        onOpenSchemaDirectory={store.openSchemaDirectory}
         onSave={store.saveFile}
         onSaveAs={store.saveFileAs}
         onValidate={validateAndOpen}
@@ -90,31 +95,33 @@ export const AppShell = () => {
           onDelete={store.deleteAction}
           onMove={store.moveAction}
         />
-        <section
-          className="relative min-h-0 overflow-auto rounded-lg border border-border p-4 simple-card-shadow"
-          style={{
-            backgroundImage: `linear-gradient(135deg, rgba(8, 10, 24, 0.72), rgba(31, 10, 49, 0.58)), url(${editorBackgroundImage})`,
-            backgroundPosition: "center center",
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
-          }}
-        >
-          <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
-          <div className="relative z-10">
-            <ActionEditor
-              action={selectedAction}
-              actionIndex={selectedActionIndex}
-              selectedTimelineId={store.selectedTimelineId}
-              highlightedValidationPath={highlightedValidationPath}
-              onUpdateAction={(patch) => selectedAction && store.updateAction(selectedAction.__editorId, patch)}
-              onSelectTimeline={store.selectTimeline}
-              onAddTimeline={(type) => selectedAction && store.addTimeline(selectedAction.__editorId, type)}
-              onUpdateTimeline={(timelineId, patch) => selectedAction && store.updateTimeline(selectedAction.__editorId, timelineId, patch)}
-              onDuplicateTimeline={(timelineId) => selectedAction && store.duplicateTimeline(selectedAction.__editorId, timelineId)}
-              onDeleteTimeline={(timelineId) => selectedAction && store.deleteTimeline(selectedAction.__editorId, timelineId)}
-              onMoveTimeline={(timelineId, direction) => selectedAction && store.moveTimeline(selectedAction.__editorId, timelineId, direction)}
-              onUpdateDerivations={(derivations) => selectedAction && store.updateDerivations(selectedAction.__editorId, derivations)}
-            />
+        <section className="min-h-0 overflow-auto rounded-lg border border-border bg-slate-950 simple-card-shadow">
+          <div
+            className="relative min-h-full p-4"
+            style={{
+              backgroundImage: `linear-gradient(135deg, rgba(8, 10, 24, 0.72), rgba(31, 10, 49, 0.58)), url(${editorBackgroundImage})`,
+              backgroundPosition: "center top",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+            }}
+          >
+            <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]" />
+            <div className="relative z-10">
+              <ActionEditor
+                action={selectedAction}
+                actionIndex={selectedActionIndex}
+                selectedTimelineId={store.selectedTimelineId}
+                highlightedValidationPath={highlightedValidationPath}
+                onUpdateAction={(patch) => selectedAction && store.updateAction(selectedAction.__editorId, patch)}
+                onSelectTimeline={store.selectTimeline}
+                onAddTimeline={(type) => selectedAction && store.addTimeline(selectedAction.__editorId, type)}
+                onUpdateTimeline={(timelineId, patch) => selectedAction && store.updateTimeline(selectedAction.__editorId, timelineId, patch)}
+                onDuplicateTimeline={(timelineId) => selectedAction && store.duplicateTimeline(selectedAction.__editorId, timelineId)}
+                onDeleteTimeline={(timelineId) => selectedAction && store.deleteTimeline(selectedAction.__editorId, timelineId)}
+                onMoveTimeline={(timelineId, direction) => selectedAction && store.moveTimeline(selectedAction.__editorId, timelineId, direction)}
+                onUpdateDerivations={(derivations) => selectedAction && store.updateDerivations(selectedAction.__editorId, derivations)}
+              />
+            </div>
           </div>
         </section>
       </main>

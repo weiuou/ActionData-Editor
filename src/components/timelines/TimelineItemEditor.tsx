@@ -2,10 +2,14 @@ import { useMemo, useState } from "react";
 import { JsonTextArea } from "@/components/fields/JsonTextArea";
 import { BooleanField } from "@/components/fields/BooleanField";
 import { NumberField } from "@/components/fields/NumberField";
+import { StringArrayField } from "@/components/fields/StringArrayField";
 import { TimelineRangeField } from "@/components/fields/TimelineRangeField";
 import { TextField } from "@/components/fields/TextField";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BattleData, EffectSpawn, TimelineData } from "@/models/actionData";
+import { useEditorStore } from "@/store/editorStore";
+import { getTimelineSchemaForType, humanizeIdentifier } from "@/schema/csharpTimelineSchema";
+import { SchemaTimelineFields } from "./SchemaTimelineFields";
 import { TIMELINE_TYPES, timelineTypeLabel } from "@/models/timelineTypes";
 
 interface TimelineItemEditorProps {
@@ -60,11 +64,19 @@ const EffectSpawnFields = ({ value, basePath, isHighlighted, onChange }: { value
 );
 
 export const TimelineItemEditor = ({ timeline, actionIndex, timelineIndex, highlightedValidationPath, onChange }: TimelineItemEditorProps) => {
+  const timelineSchemaRegistry = useEditorStore((state) => state.timelineSchemaRegistry);
   const [rawJson, setRawJson] = useState(() => JSON.stringify(timeline, null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
   const isUnknown = !Object.values(TIMELINE_TYPES).includes(timeline.$type as never);
+  const timelineSchema = getTimelineSchemaForType(timelineSchemaRegistry, timeline.$type);
 
-  const header = useMemo(() => timelineTypeLabel(timeline.$type), [timeline.$type]);
+  const header = useMemo(() => {
+    const fallbackLabel = timelineTypeLabel(timeline.$type);
+    if (fallbackLabel !== timeline.$type) {
+      return fallbackLabel;
+    }
+    return timelineSchema ? humanizeIdentifier(timelineSchema.name.replace(/Data$/, "")) : timeline.$type;
+  }, [timeline.$type, timelineSchema]);
   const timelinePath = `[${actionIndex}].TimelineDatas[${timelineIndex}]`;
   const isHighlighted = (path: string) => highlightedValidationPath === path || Boolean(highlightedValidationPath?.startsWith(`${path}.`));
 
@@ -97,7 +109,18 @@ export const TimelineItemEditor = ({ timeline, actionIndex, timelineIndex, highl
           onChange={onChange}
         />
 
-        {timeline.$type === TIMELINE_TYPES.moveState || timeline.$type === TIMELINE_TYPES.moveStraight ? (
+        {timelineSchemaRegistry && timelineSchema ? (
+          <SchemaTimelineFields
+            schema={timelineSchema}
+            timeline={timeline}
+            basePath={timelinePath}
+            highlightedValidationPath={highlightedValidationPath}
+            registry={timelineSchemaRegistry}
+            onChange={onChange}
+          />
+        ) : null}
+
+        {!timelineSchema && (timeline.$type === TIMELINE_TYPES.moveState || timeline.$type === TIMELINE_TYPES.moveStraight) ? (
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
               <BooleanField label="Ghost Layer" checked={timeline.useGhostLayer as boolean} validationPath={`${timelinePath}.useGhostLayer`} highlighted={isHighlighted(`${timelinePath}.useGhostLayer`)} onChange={(useGhostLayer) => onChange({ useGhostLayer })} />
@@ -112,32 +135,32 @@ export const TimelineItemEditor = ({ timeline, actionIndex, timelineIndex, highl
           </div>
         ) : null}
 
-        {timeline.$type === TIMELINE_TYPES.jointColl ? (
+        {!timelineSchema && timeline.$type === TIMELINE_TYPES.jointColl ? (
           <>
-            <TextField
+            <StringArrayField
               label="Joints"
-              value={Array.isArray(timeline.joints) ? timeline.joints.join(", ") : ""}
-              placeholder="coll_handR, coll_handL"
+              value={Array.isArray(timeline.joints) ? timeline.joints : []}
+              placeholder="coll_handR coll_handL"
               validationPath={`${timelinePath}.joints`}
               highlighted={isHighlighted(`${timelinePath}.joints`)}
-              onChange={(value) => onChange({ joints: value.split(",").map((item) => item.trim()).filter(Boolean) })}
+              onChange={(joints) => onChange({ joints })}
             />
             <BattleDataFields value={timeline.battleData as BattleData | undefined} basePath={`${timelinePath}.battleData`} isHighlighted={isHighlighted} onChange={(battleData) => onChange({ battleData })} />
           </>
         ) : null}
 
-        {timeline.$type === TIMELINE_TYPES.weaponColl ? (
+        {!timelineSchema && timeline.$type === TIMELINE_TYPES.weaponColl ? (
           <BattleDataFields value={timeline.battleData as BattleData | undefined} basePath={`${timelinePath}.battleData`} isHighlighted={isHighlighted} onChange={(battleData) => onChange({ battleData })} />
         ) : null}
 
-        {timeline.$type === TIMELINE_TYPES.effectSpawn ? (
+        {!timelineSchema && timeline.$type === TIMELINE_TYPES.effectSpawn ? (
           <>
             <EffectSpawnFields value={timeline.effectSpawn as EffectSpawn | undefined} basePath={`${timelinePath}.effectSpawn`} isHighlighted={isHighlighted} onChange={(effectSpawn) => onChange({ effectSpawn })} />
             <BattleDataFields value={timeline.battleData as BattleData | undefined} basePath={`${timelinePath}.battleData`} isHighlighted={isHighlighted} onChange={(battleData) => onChange({ battleData })} />
           </>
         ) : null}
 
-        {isUnknown ? <JsonTextArea label="Raw Timeline JSON" value={rawJson} validationPath={timelinePath} highlighted={isHighlighted(timelinePath)} onChange={updateRawJson} error={jsonError} /> : null}
+        {isUnknown && !timelineSchema ? <JsonTextArea label="Raw Timeline JSON" value={rawJson} validationPath={timelinePath} highlighted={isHighlighted(timelinePath)} onChange={updateRawJson} error={jsonError} /> : null}
       </CardContent>
     </Card>
   );
